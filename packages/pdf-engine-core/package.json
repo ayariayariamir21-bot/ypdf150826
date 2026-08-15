@@ -1,0 +1,16 @@
+{
+  "name": "@pdfplatform/pdf-engine-core",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@pdfplatform/ts-config": "workspace:*",
+    "typescript": "^5.6.3"
+  }
+}

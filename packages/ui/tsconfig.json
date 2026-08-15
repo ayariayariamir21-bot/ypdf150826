@@ -1,0 +1,4 @@
+{
+  "extends": "@pdfplatform/ts-config/react-library",
+  "include": ["src/**/*.ts", "src/**/*.tsx"]
+}
