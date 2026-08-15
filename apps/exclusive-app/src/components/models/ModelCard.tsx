@@ -42,12 +42,24 @@ export function ModelCard({
   const isTraining = model.status === 'training' || model.status === 'queued';
 
   return (
-    <article
+    <div
+      role="button"
+      tabIndex={0}
+      aria-label={`View details for ${model.name}`}
       className={cn(
         'panel cursor-pointer p-4 transition-colors',
         selected ? 'border-brand-500 ring-2 ring-brand-500/40' : 'hover:border-dark-border-hover'
       )}
       onClick={() => onSelect(model)}
+      onKeyDown={(event) => {
+        if (event.target !== event.currentTarget) {
+          return;
+        }
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          onSelect(model);
+        }
+      }}
     >
       <div className="flex items-start gap-3">
         <span
@@ -142,6 +154,6 @@ export function ModelCard({
           {deleting ? 'Deleting…' : 'Delete'}
         </button>
       </div>
-    </article>
+    </div>
   );
 }

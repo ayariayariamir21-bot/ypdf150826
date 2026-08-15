@@ -40,8 +40,10 @@ export function MobileNav(): React.ReactElement | null {
 
   return (
     <div className="fixed inset-0 z-50 lg:hidden">
-      <div
-        className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+      <button
+        type="button"
+        aria-label="Close menu"
+        className="absolute inset-0 cursor-default bg-slate-900/60 backdrop-blur-sm"
         onClick={() => setMobileNavOpen(false)}
       />
       <div className="absolute inset-y-0 left-0 flex w-72 flex-col bg-white shadow-float dark:bg-slate-950">

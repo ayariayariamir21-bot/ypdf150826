@@ -115,32 +115,42 @@ export function PdfPage({ slot, pageIndex, scale, widthPt, heightPt }: PdfPagePr
     };
   }, [pageIndex, scale]);
 
-  const handleTextSelection = (): void => {
-    if (tool !== 'text' || pageIndex === null) {
+  React.useEffect(() => {
+    const wrapper = wrapperRef.current;
+    if (!wrapper) {
       return;
     }
-    const selection = window.getSelection();
-    const range = selection && selection.rangeCount > 0 ? selection.getRangeAt(0) : null;
-    if (!range || range.collapsed) {
-      return;
-    }
-    const rect = wrapperRef.current?.getBoundingClientRect();
-    if (!rect || rect.width === 0 || rect.height === 0) {
-      return;
-    }
-    const bounds = range.getBoundingClientRect();
-    const x = clamp((bounds.left - rect.left) / rect.width, 0, 1);
-    const y = clamp((bounds.top - rect.top) / rect.height, 0, 1);
-    const w = clamp(bounds.width / rect.width, 0, 1 - x);
-    const h = clamp(bounds.height / rect.height, 0, 1 - y);
-    useAnnotationsStore.getState().addAnnotation({
-      type: 'highlight',
-      page: pageIndex,
-      bbox: { x, y, w, h },
-      color: DEFAULT_COLOR,
-    });
-    selection?.removeAllRanges();
-  };
+    const handlePointerUp = (): void => {
+      if (tool !== 'text' || pageIndex === null) {
+        return;
+      }
+      const selection = window.getSelection();
+      const range = selection && selection.rangeCount > 0 ? selection.getRangeAt(0) : null;
+      if (!range || range.collapsed) {
+        return;
+      }
+      const rect = wrapper.getBoundingClientRect();
+      if (!rect || rect.width === 0 || rect.height === 0) {
+        return;
+      }
+      const bounds = range.getBoundingClientRect();
+      const x = clamp((bounds.left - rect.left) / rect.width, 0, 1);
+      const y = clamp((bounds.top - rect.top) / rect.height, 0, 1);
+      const w = clamp(bounds.width / rect.width, 0, 1 - x);
+      const h = clamp(bounds.height / rect.height, 0, 1 - y);
+      useAnnotationsStore.getState().addAnnotation({
+        type: 'highlight',
+        page: pageIndex,
+        bbox: { x, y, w, h },
+        color: DEFAULT_COLOR,
+      });
+      selection?.removeAllRanges();
+    };
+    wrapper.addEventListener('pointerup', handlePointerUp);
+    return () => {
+      wrapper.removeEventListener('pointerup', handlePointerUp);
+    };
+  }, [tool, pageIndex]);
 
   const cursorClass =
     tool === 'pan'
@@ -158,7 +168,6 @@ export function PdfPage({ slot, pageIndex, scale, widthPt, heightPt }: PdfPagePr
       <div
         ref={wrapperRef}
         className={cn('absolute inset-0 overflow-hidden', cursorClass)}
-        onMouseUp={handleTextSelection}
       >
         <canvas ref={canvasRef} className="absolute inset-0" />
         <div ref={textLayerRef} className="textLayer" style={{ width, height }} />

@@ -26,9 +26,9 @@ const itemVariants = cva(
   }
 );
 
-export interface DropdownMenuContentProps extends React.ComponentPropsWithoutRef<
+export type DropdownMenuContentProps = React.ComponentPropsWithoutRef<
   typeof DropdownMenuPrimitive.Content
-> {}
+>;
 
 export const DropdownMenuContent = React.forwardRef<
   React.ElementRef<typeof DropdownMenuPrimitive.Content>,

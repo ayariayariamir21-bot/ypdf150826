@@ -41,6 +41,11 @@ function NoteEditor({
   onRemove,
 }: NoteEditorProps): React.ReactElement {
   const [draft, setDraft] = React.useState(annotation.content ?? '');
+  const textareaRef = React.useRef<HTMLTextAreaElement>(null);
+
+  React.useEffect(() => {
+    textareaRef.current?.focus();
+  }, []);
 
   const submit = (): void => {
     onSave(draft);
@@ -58,7 +63,7 @@ function NoteEditor({
         </Button>
       </div>
       <textarea
-        autoFocus
+        ref={textareaRef}
         value={draft}
         onChange={(event) => setDraft(event.target.value)}
         onKeyDown={(event) => {

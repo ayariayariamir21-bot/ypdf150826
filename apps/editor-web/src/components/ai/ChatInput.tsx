@@ -60,6 +60,10 @@ export function ChatInput({
   }, [value]);
 
   React.useEffect(() => {
+    textareaRef.current?.focus();
+  }, []);
+
+  React.useEffect(() => {
     return () => {
       recognitionRef.current?.abort();
     };
@@ -110,7 +114,6 @@ export function ChatInput({
       <div className="flex items-end gap-2 rounded-lg border border-slate-200 bg-white p-2 focus-within:border-brand-400 focus-within:ring-2 focus-within:ring-brand-400/30 dark:border-slate-700 dark:bg-slate-800">
         <textarea
           ref={textareaRef}
-          autoFocus
           value={value}
           onChange={(event) => setValue(event.target.value)}
           onKeyDown={(event) => {
