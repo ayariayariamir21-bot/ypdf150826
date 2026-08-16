@@ -7,9 +7,12 @@ import {
 } from '@pdfplatform/pdf-engine-core';
 import type { PDFPageProxy } from 'pdfjs-dist';
 import type { PdfRecentDocument } from '@/types';
+import type { Annotation } from '@/types';
 import { BLANK_PAGE_HEIGHT, BLANK_PAGE_WIDTH, MAX_HISTORY } from './constants';
 import { downloadBlob, errorMessage, uid } from './utils';
 import { PdfJsEngine } from './pdfjsEngine';
+import { burnAnnotationsIntoPdf } from './pdfAnnotationBurn';
+import { drawAnnotationsOnContext } from './annotationRenderer';
 
 export interface PdfLibDocument {
   documentId: string;
@@ -230,8 +233,28 @@ export async function closeActiveDocument(): Promise<void> {
   }
 }
 
+function dataUrlToBytes(dataUrl: string): Uint8Array {
+  const base64 = dataUrl.slice(dataUrl.indexOf(',') + 1);
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let index = 0; index < binary.length; index += 1) {
+    bytes[index] = binary.charCodeAt(index);
+  }
+  return bytes;
+}
+
+function loadImage(dataUrl: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => resolve(image);
+    image.onerror = () => reject(new Error('Failed to render the exported page'));
+    image.src = dataUrl;
+  });
+}
+
 export async function exportActiveDocument(
   format: PdfExportFormat,
+  annotations: readonly Annotation[],
   pageIndexes?: readonly number[]
 ): Promise<void> {
   const engine = activeEngine;
@@ -239,13 +262,47 @@ export async function exportActiveDocument(
   if (!engine || !document) {
     throw new Error('No document is open');
   }
-  const result = await engine.exportDocument(document.documentId, {
-    format,
-    pageIndexes,
+  if (format === 'pdf') {
+    const result = await engine.exportDocument(document.documentId, { format, pageIndexes });
+    const blobPart = result.data as Uint8Array<ArrayBuffer>;
+    if (annotations.length === 0) {
+      downloadBlob(new Blob([blobPart], { type: result.mimeType }), result.name);
+      return;
+    }
+    const burned = await burnAnnotationsIntoPdf(result.data, annotations);
+    downloadBlob(new Blob([burned as Uint8Array<ArrayBuffer>], { type: result.mimeType }), result.name);
+    return;
+  }
+  if (format === 'txt') {
+    const result = await engine.exportDocument(document.documentId, { format, pageIndexes });
+    const blobPart = result.data as Uint8Array<ArrayBuffer>;
+    downloadBlob(new Blob([blobPart], { type: result.mimeType }), result.name);
+    return;
+  }
+  const targetPages = pageIndexes && pageIndexes.length > 0 ? [...pageIndexes] : [0];
+  const pageIndex = targetPages[0] ?? 0;
+  const rendered = await engine.renderPage(document.documentId, pageIndex, {
     scale: 2,
+    format,
+    quality: 0.92,
   });
-  const blobPart = result.data as Uint8Array<ArrayBuffer>;
-  downloadBlob(new Blob([blobPart], { type: result.mimeType }), result.name);
+  const canvas = globalThis.document.createElement('canvas');
+  canvas.width = rendered.width;
+  canvas.height = rendered.height;
+  const context = canvas.getContext('2d');
+  if (!context) {
+    throw new Error('Canvas 2D context is unavailable');
+  }
+  const image = await loadImage(rendered.dataUrl);
+  context.drawImage(image, 0, 0, rendered.width, rendered.height);
+  drawAnnotationsOnContext(context, annotations, pageIndex, rendered.width, rendered.height);
+  const dataUrl = canvas.toDataURL(`image/${format}`, 0.92);
+  canvas.width = 0;
+  canvas.height = 0;
+  const data = dataUrlToBytes(dataUrl);
+  const extension = format === 'png' ? 'png' : 'jpg';
+  const name = `${document.name.replace(/\.pdf$/i, '')}-p${pageIndex + 1}.${extension}`;
+  downloadBlob(new Blob([data as Uint8Array<ArrayBuffer>], { type: `image/${format}` }), name);
 }
 
 export function makeTemporaryId(): string {

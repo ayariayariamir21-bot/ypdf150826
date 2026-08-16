@@ -58,7 +58,7 @@ const TOOLS: readonly ToolDefinition[] = [
   { id: 'draw', label: 'Draw', shortcut: 'D', Icon: IconPencil },
   { id: 'sign', label: 'Sign', shortcut: 'Y', Icon: IconSignature },
   { id: 'stamp', label: 'Stamp', shortcut: 'B', Icon: IconStamp },
-  { id: 'redaction', label: 'Redact', shortcut: 'R', Icon: IconShield },
+  { id: 'redaction', label: 'Redact (visual only)', shortcut: 'R', Icon: IconShield },
 ];
 
 export function Toolbar(): React.ReactElement {
@@ -73,6 +73,7 @@ export function Toolbar(): React.ReactElement {
   const annotationsCanRedo = useAnnotationsStore((state) => state.canRedo);
   const annotationsUndo = useAnnotationsStore((state) => state.undo);
   const annotationsRedo = useAnnotationsStore((state) => state.redo);
+  const annotations = useAnnotationsStore((state) => state.annotations);
   const { document } = usePdfDocument();
   const tier = useAuthStore((state) => state.user?.tier ?? 'free');
   const showToast = useToastStore((state) => state.showToast);
@@ -141,7 +142,7 @@ export function Toolbar(): React.ReactElement {
   const runExport = async (format: PdfExportFormat): Promise<void> => {
     setExporting(true);
     try {
-      await exportActiveDocument(format);
+      await exportActiveDocument(format, annotations);
       showToast('success', `Exported as ${EXPORT_FORMAT_LABELS[format]}`);
     } catch (cause) {
       showToast('error', errorMessage(cause));

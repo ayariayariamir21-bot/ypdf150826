@@ -10,6 +10,9 @@ interface RedactionOverlayProps {
   locked?: boolean;
 }
 
+const VISUAL_ONLY_TITLE =
+  'Visual redaction only - the underlying text is not removed from the file';
+
 export function RedactionOverlay({
   annotation,
   left,
@@ -25,6 +28,7 @@ export function RedactionOverlay({
       <div
         role="img"
         aria-label="Redaction locked"
+        title={VISUAL_ONLY_TITLE}
         className="absolute flex items-center justify-center rounded-[2px] border-2 border-dashed border-danger-500/70 bg-black/5"
         style={{ left, top, width, height }}
       >
@@ -37,6 +41,7 @@ export function RedactionOverlay({
     <div
       role="img"
       aria-label={`Redacted: ${label}`}
+      title={VISUAL_ONLY_TITLE}
       className="absolute flex items-center justify-center overflow-hidden rounded-[2px] bg-slate-950"
       style={{ left, top, width, height, boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.08)' }}
     >

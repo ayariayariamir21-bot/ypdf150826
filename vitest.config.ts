@@ -4,6 +4,7 @@ import { defineConfig } from 'vitest/config';
 const editorWebSrc = fileURLToPath(new URL('./apps/editor-web/src', import.meta.url));
 const exclusiveAppSrc = fileURLToPath(new URL('./apps/exclusive-app/src', import.meta.url));
 const pdfjsDist = fileURLToPath(new URL('./apps/editor-web/node_modules/pdfjs-dist', import.meta.url));
+const pdfLib = fileURLToPath(new URL('./apps/editor-web/node_modules/pdf-lib', import.meta.url));
 
 export default defineConfig({
   resolve: {
@@ -16,6 +17,7 @@ export default defineConfig({
         new URL('./packages/pdf-engine-core/src/index.ts', import.meta.url)
       ),
       'pdfjs-dist': pdfjsDist,
+      'pdf-lib': pdfLib,
     },
   },
   test: {
